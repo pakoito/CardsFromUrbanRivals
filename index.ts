@@ -137,7 +137,7 @@ try {
     idx++;
   }
   console.log("Writing index");
-  await write("./cards/index.json", JSON.stringify(info, null, 2));
+  await write("./cards/card_index.json", JSON.stringify(info, null, 2));
 } finally {
   browser.close();
 }
