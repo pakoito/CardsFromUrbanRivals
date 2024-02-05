@@ -7,6 +7,8 @@ const browser = await puppeteer.launch({
   executablePath: "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
 });
 
+const info: Record<string, any> = {};
+
 const launch = async (id: number) => {
   const page = await browser.newPage();
   try {
@@ -17,13 +19,14 @@ const launch = async (id: number) => {
     });
 
     const res = await page.goto(
-      `https://iclintz.com/characters/clan.php?ID=${id}`
+      `https://iclintz.com/characters/clan.php?ID=${id}`,
+      { waitUntil: ["load", "domcontentloaded", "networkidle2"] }
     );
-    await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
 
     const title = await page.title();
     const clan = title.split("| ")[1];
     console.log(`Starting clan [${clan}]`);
+    info[clan] = { _meta: { name: clan } };
 
     console.log("Clicking the cookies!");
     const buttons = await page.$$("button");
@@ -64,6 +67,45 @@ const launch = async (id: number) => {
       const nameContainer = await element.$(".cardName.urbanFont");
       const name = await nameContainer?.evaluate((e) => e.textContent);
       const path = `./cards/${clan}/${name}.png`;
+      if (name) {
+        info[clan][name] = {};
+
+        const bonusContainer = await (
+          await element.$(".cardBonus")
+        )?.$(".vcenterContent");
+        const bonus = (
+          await bonusContainer?.evaluate((e) => e.textContent)
+        )?.replaceAll(/ ( +)|\n/g, "");
+        info[clan][name].bonus = bonus;
+        info[clan]["_meta"].bonus = bonus;
+
+        info[clan][name].name = name;
+
+        const powerContainer = await (
+          await element.$(".cardPower")
+        )?.$(".vcenterContent");
+        const power = await powerContainer?.evaluate((e) => e.textContent);
+        info[clan][name].power = power?.replaceAll(/ ( +)|\n/g, "");
+
+        const attackContainer = await element.$(".cardPH");
+        const attack = await attackContainer?.evaluate((e) =>
+          Number(e.textContent)
+        );
+        info[clan][name].attack = attack;
+
+        const damageContainer = await element.$(".cardPDD");
+        const damage = await damageContainer?.evaluate((e) =>
+          Number(e.textContent)
+        );
+        info[clan][name].damage = damage;
+
+        const starsContainer = await element.$(".cardStars");
+        const stars = await starsContainer?.evaluate(
+          (e) => e.children.length - 1
+        );
+        info[clan][name].stars = stars;
+      }
+
       if (name && !(await exists(path))) {
         const content = await element?.screenshot({ omitBackground: true });
         console.log(`-> Writing ${idx}/${elements.length}: ${name}`);
@@ -94,6 +136,8 @@ try {
     await launch(id);
     idx++;
   }
+  console.log("Writing index");
+  await write("./cards/index.json", JSON.stringify(info, null, 2));
 } finally {
   browser.close();
 }
