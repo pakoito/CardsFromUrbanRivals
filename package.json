@@ -1,0 +1,25 @@
+{
+  "name": "urbanrivals",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "delett": "rm -rf ./cards"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/jsdom": "^21.1.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "dom-to-image-more": "^3.2.0",
+    "fast-xml-parser": "^4.3.4",
+    "html2canvas": "^1.4.1",
+    "jsdom": "^24.0.0",
+    "node-html-parser": "^6.1.12",
+    "puppeteer": "^21.11.0"
+  }
+}
