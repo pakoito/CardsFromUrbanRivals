@@ -138,7 +138,9 @@ const launch = async (id: number) => {
 };
 
 try {
-  console.log("Start by fetching clan ids");
+  if (debug) {
+    console.log("DEBUG MODE: ON\nStart by fetching clan ids");
+  }
   const clans = await fetch("https://iclintz.com/characters/clan.php?ID=38");
   const htmlText = await clans.text();
   const results = [
