@@ -9,6 +9,8 @@ const browser = await puppeteer.launch({
 
 const info: Record<string, any> = {};
 
+const debug = process.env.DEBUG ?? false;
+
 const launch = async (id: number) => {
   const page = await browser.newPage();
   try {
@@ -25,10 +27,14 @@ const launch = async (id: number) => {
 
     const title = await page.title();
     const clan = title.split("| ")[1];
-    console.log(`Starting clan [${clan}]`);
+    if (debug) {
+      console.log(`Starting clan ${clan}`);
+    }
     info[clan] = { _meta: { name: clan } };
 
-    console.log("Clicking the cookies!");
+    if (debug) {
+      console.log("Clicking the cookies!");
+    }
     const buttons = await page.$$("button");
     const as = await page.$$("a");
     await Promise.all([
@@ -40,7 +46,9 @@ const launch = async (id: number) => {
             )?.length ?? 0) > 0
         );
         if (is) {
-          console.log("Clicked the cookie on button!");
+          if (debug) {
+            console.log("Clicked the cookie on button!");
+          }
           b.click().catch(() => {});
         }
       }),
@@ -52,7 +60,9 @@ const launch = async (id: number) => {
             )?.length ?? 0) > 0
         );
         if (is) {
-          console.log("Clicked the cookie on a!");
+          if (debug) {
+            console.log("Clicked the cookie on a!");
+          }
           b.click().catch(() => {});
         }
       }),
@@ -63,6 +73,8 @@ const launch = async (id: number) => {
     console.log(`Clan ${clan} has ${elements.length} cards`);
 
     let idx = 1;
+    let downloaded = 0;
+    let skipped = 0;
     for (const element of elements) {
       const nameContainer = await element.$(".cardName.urbanFont");
       const name = await nameContainer?.evaluate((e) => e.textContent);
@@ -110,11 +122,16 @@ const launch = async (id: number) => {
         const content = await element?.screenshot({ omitBackground: true });
         console.log(`-> Writing ${idx}/${elements.length}: ${name}`);
         await write(path, content);
+        downloaded++;
       } else {
-        console.log(`Skipping ${idx}/${elements.length}: ${name}`);
+        if (debug) {
+          console.log(`Skipping ${idx}/${elements.length}: ${name}`);
+        }
+        skipped++;
       }
       idx++;
     }
+    console.log(`Updated ${downloaded} and skipped ${skipped} cards`);
   } finally {
     await page.close();
   }
